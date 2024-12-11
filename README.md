@@ -3,6 +3,8 @@
 A real-time 3D Smoothed Particle Hydrodynamics (SPH) fluid simulation implemented in Python using OpenGL for visualization.
 
 
+![Simulation](evolution/Normal.gif)
+
 
 
 ## Description
@@ -39,6 +41,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```bash
 pip install -r requirements.txt
 ```
+make sure you have the pyopengl folder
 
 ## Usage
 
@@ -74,6 +77,13 @@ python sph
   - Optimized neighbor search
   - Vectorized calculations using NumPy
   - Efficient OpenGL rendering
+
+#### Velocity Colors
+![VelocityColors](evolution/Velocity.gif)
+
+#### Pressure Colors
+![PressureColors](evolution/Pressure.gif)
+
 
 ## Technical Details
 
