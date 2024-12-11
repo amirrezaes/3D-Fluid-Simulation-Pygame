@@ -2,6 +2,9 @@
 
 A real-time 3D Smoothed Particle Hydrodynamics (SPH) fluid simulation implemented in Python using OpenGL for visualization.
 
+
+
+
 ## Description
 
 This project implements a particle-based fluid simulation using the SPH method. The simulation features:
@@ -97,4 +100,7 @@ The simulation performance depends on:
 - Screen resolution
 - Particle size and rendering settings
 
-Adjust these parameters in config.py to optimize performance for your system.
+## Evolutions:
+
+![Rev1](evolution/Video_demo.gif)
+![Rev2](evolution/Video_demo2.gif)
