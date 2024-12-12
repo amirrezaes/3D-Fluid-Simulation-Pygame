@@ -7,6 +7,7 @@ from particle import Particle
 from hashg import SpatialHashGrid
 from typing import List
 
+
 (
     N,
     SIM_W,
@@ -44,43 +45,84 @@ def start(xmin: float, xmax: float, ymin: float, zmin: float, space: float, coun
     
     return [Particle(pos[0], pos[1], pos[2]) for pos in positions]
 
-
-def calculate_density( particles: list[Particle], interaction_radius: float = R) -> None:
-    grid = SpatialHashGrid(cell_size=interaction_radius)
+# was slow
+# def calculate_density( particles: list[Particle], interaction_radius: float = R) -> None:
+#     grid = SpatialHashGrid(cell_size=interaction_radius)
     
-    # Clear and insert particles
-    grid.clear()
+#     for particle in particles:
+#         # Reset particle properties
+#         particle.rho = 0.0
+#         particle.rho_near = 0.0
+#         particle.neighbors = []
+        
+#         # Insert into grid
+#         grid.insert(particle)
+    
+#     # Calculate densities
+#     for particle in particles:
+#         # Find neighbors efficiently
+#         neighbors = grid.find_neighbors(particle, interaction_radius)
+        
+#         # Density calculation (similar to original method)
+#         for neighbor in neighbors:
+#             distance = (
+#                 (particle.x_pos - neighbor.x_pos)**2 +
+#                 (particle.y_pos - neighbor.y_pos)**2 +
+#                 (particle.z_pos - neighbor.z_pos)**2
+#             ) ** 0.5
+            
+#             if distance < interaction_radius:
+#                 normal_distance = 1 - distance / interaction_radius
+                
+#                 density_contribution = normal_distance**2
+#                 density_near_contribution = normal_distance**3
+                
+#                 particle.rho += density_contribution
+#                 particle.rho_near += density_near_contribution
+
+
+def calculate_density(particles: list[Particle]) -> None:
+    # Pre-allocate neighbor lists to reduce memory reallocation
     for particle in particles:
-        # Reset particle properties
+        particle.neighbors.clear()
         particle.rho = 0.0
         particle.rho_near = 0.0
-        particle.neighbors = []
-        
-        # Insert into grid
-        grid.insert(particle)
     
-    # Calculate densities
-    for particle in particles:
-        # Find neighbors efficiently
-        neighbors = grid.find_neighbors(particle, interaction_radius)
-        
-        # Density calculation (similar to original method)
-        for neighbor in neighbors:
-            distance = sqrt(
-                (particle.x_pos - neighbor.x_pos)**2 +
-                (particle.y_pos - neighbor.y_pos)**2 +
-                (particle.z_pos - neighbor.z_pos)**2
-            )
-            
-            if distance < interaction_radius:
-                normal_distance = 1 - distance / interaction_radius
-                
-                density_contribution = normal_distance**2
-                density_near_contribution = normal_distance**3
-                
-                particle.rho += density_contribution
-                particle.rho_near += density_near_contribution
+    R_sq = R * R
 
+    # Use NumPy for vectorized calculations if possible
+    for i, particle_1 in enumerate(particles):
+        for particle_2 in particles[i + 1:]:
+            # Use faster squared distance comparison to avoid square root
+            dx = particle_1.x_pos - particle_2.x_pos
+            dy = particle_1.y_pos - particle_2.y_pos
+            dz = particle_1.z_pos - particle_2.z_pos
+            
+            squared_distance = dx*dx + dy*dy + dz*dz
+            
+            # Early exit if outside interaction radius
+            if squared_distance >= R_sq:
+                continue
+            
+            # Calculate distance more efficiently
+            distance = sqrt(squared_distance)
+            
+            # Compute normalized distance
+            normal_distance = 1 - distance / R
+            
+            # Precompute repeated calculations
+            normal_squared = normal_distance**2
+            normal_cubed = normal_distance**3
+            
+            # Symmetric density updates
+            particle_1.rho += normal_squared
+            particle_1.rho_near += normal_cubed
+            particle_2.rho += normal_squared
+            particle_2.rho_near += normal_cubed
+            
+            # Bidirectional neighbor tracking
+            particle_1.neighbors.append(particle_2)
+            particle_2.neighbors.append(particle_1)
 
 
 def create_pressure(particles: list[Particle]) -> None:

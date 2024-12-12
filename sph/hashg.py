@@ -1,9 +1,7 @@
 from typing import List, Tuple
 import math
-from dataclasses import dataclass
 from particle import Particle
 from numba import jit
-
 
 class SpatialHashGrid:
     def __init__(self, cell_size: float):

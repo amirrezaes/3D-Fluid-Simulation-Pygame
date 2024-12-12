@@ -232,13 +232,11 @@ class AnimatedScatter():
         self.clock.tick()
 
     def update_simulation(self, particles, dam):
-        for particle in particles:
-            particle.update_state(dam)
+        [p.update_state(dam) for p in particles]
 
         calculate_density(particles)
 
-        for particle in particles:
-            particle.calculate_pressure()
+        [p.calculate_pressure() for p in particles]
 
         create_pressure(particles)
         calculate_viscosity(particles)
