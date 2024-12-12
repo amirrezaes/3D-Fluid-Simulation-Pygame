@@ -4,6 +4,8 @@ from math import sqrt
 from config import SimulationConfig as Config
 import numpy as np
 from particle import Particle
+from hashg import SpatialHashGrid
+from typing import List
 
 (
     N,
@@ -24,28 +26,6 @@ from particle import Particle
     VEL_DAMP,
 ) = Config().get_simulation_parameters()
 
-SURFACE_TENSION = 0.001
-
-'''def start(
-    xmin: float, xmax: float, ymin: float, zmin: float, space: float, count: int
-) -> list[Particle]:
-    """Creates a 3D cube of particles"""
-    result = []
-    x_pos, y_pos, z_pos = xmin, ymin, zmin
-    particles_per_side = int(pow(count, 1/3))  # Cube root for 3D distribution
-    
-    for _ in range(particles_per_side):
-        for _ in range(particles_per_side):
-            for _ in range(particles_per_side):
-                result.append(Particle(x_pos, y_pos, z_pos))
-                z_pos += space
-            z_pos = zmin
-            y_pos += space
-        y_pos = ymin
-        x_pos += space
-    
-    return result'''
-
 
 def start(xmin: float, xmax: float, ymin: float, zmin: float, space: float, count: int) -> list[Particle]:
     """Creates a 3D cube of particles using vectorized operations"""
@@ -65,29 +45,45 @@ def start(xmin: float, xmax: float, ymin: float, zmin: float, space: float, coun
     return [Particle(pos[0], pos[1], pos[2]) for pos in positions]
 
 
-def calculate_density(particles: list[Particle]) -> None:
-    for i, particle_1 in enumerate(particles):
-        density = 0.0
-        density_near = 0.0
-        for particle_2 in particles[i + 1:]:
+def calculate_density( particles: list[Particle], interaction_radius: float = R) -> None:
+    grid = SpatialHashGrid(cell_size=interaction_radius)
+    
+    # Clear and insert particles
+    grid.clear()
+    for particle in particles:
+        # Reset particle properties
+        particle.rho = 0.0
+        particle.rho_near = 0.0
+        particle.neighbors = []
+        
+        # Insert into grid
+        grid.insert(particle)
+    
+    # Calculate densities
+    for particle in particles:
+        # Find neighbors efficiently
+        neighbors = grid.find_neighbors(particle, interaction_radius)
+        
+        # Density calculation (similar to original method)
+        for neighbor in neighbors:
             distance = sqrt(
-                (particle_1.x_pos - particle_2.x_pos) ** 2
-                + (particle_1.y_pos - particle_2.y_pos) ** 2
-                + (particle_1.z_pos - particle_2.z_pos) ** 2
+                (particle.x_pos - neighbor.x_pos)**2 +
+                (particle.y_pos - neighbor.y_pos)**2 +
+                (particle.z_pos - neighbor.z_pos)**2
             )
-            if distance < R:
-                normal_distance = 1 - distance / R
-                density += normal_distance**2
-                density_near += normal_distance**3
-                particle_2.rho += normal_distance**2
-                particle_2.rho_near += normal_distance**3
-                particle_1.neighbors.append(particle_2)
-        particle_1.rho += density
-        particle_1.rho_near += density_near
+            
+            if distance < interaction_radius:
+                normal_distance = 1 - distance / interaction_radius
+                
+                density_contribution = normal_distance**2
+                density_near_contribution = normal_distance**3
+                
+                particle.rho += density_contribution
+                particle.rho_near += density_near_contribution
 
 
 
-'''def create_pressure(particles: list[Particle]) -> None:
+def create_pressure(particles: list[Particle]) -> None:
     for particle in particles:
         if not particle.neighbors:
             continue
@@ -123,94 +119,8 @@ def calculate_density(particles: list[Particle]) -> None:
         total_pressure = np.sum(pressure_vectors, axis=0)
         particle.x_force -= total_pressure[0]
         particle.y_force -= total_pressure[1]
-        particle.z_force -= total_pressure[2]'''
+        particle.z_force -= total_pressure[2]
 
-def create_pressure(particles: list[Particle]) -> None:
-    for particle in particles:
-        press_x = 0.0
-        press_y = 0.0
-        press_z = 0.0
-        for neighbor in particle.neighbors:
-            particle_to_neighbor = [
-                neighbor.x_pos - particle.x_pos,
-                neighbor.y_pos - particle.y_pos,
-                neighbor.z_pos - particle.z_pos,
-            ]
-            distance = sqrt(
-                particle_to_neighbor[0] ** 2 
-                + particle_to_neighbor[1] ** 2 
-                + particle_to_neighbor[2] ** 2
-            )
-            normal_distance = 1 - distance / R
-            total_pressure = (
-                particle.press + neighbor.press
-            ) * normal_distance**2 + (
-                particle.press_near + neighbor.press_near
-            ) * normal_distance**3
-            
-            pressure_vector = [
-                particle_to_neighbor[0] * total_pressure / distance,
-                particle_to_neighbor[1] * total_pressure / distance,
-                particle_to_neighbor[2] * total_pressure / distance,
-            ]
-            
-            neighbor.x_force += pressure_vector[0]
-            neighbor.y_force += pressure_vector[1]
-            neighbor.z_force += pressure_vector[2]
-            press_x += pressure_vector[0]
-            press_y += pressure_vector[1]
-            press_z += pressure_vector[2]
-            
-        particle.x_force -= press_x
-        particle.y_force -= press_y
-        particle.z_force -= press_z
-
-
-'''def calculate_viscosity(particles: list[Particle]) -> None:
-    for particle in particles:
-        if not particle.neighbors:
-            continue
-            
-        # Convert positions and velocities to numpy arrays
-        pos = np.array([particle.x_pos, particle.y_pos, particle.z_pos])
-        vel = np.array([particle.x_vel, particle.y_vel, particle.z_vel])
-        neighbor_pos = np.array([[n.x_pos, n.y_pos, n.z_pos] for n in particle.neighbors])
-        neighbor_vel = np.array([[n.x_vel, n.y_vel, n.z_vel] for n in particle.neighbors])
-        
-        # Vectorized distance calculation
-        particle_to_neighbors = neighbor_pos - pos
-        distances = np.sqrt(np.sum(particle_to_neighbors**2, axis=1))
-        
-        # Normal vectors
-        normal_vectors = particle_to_neighbors / distances[:, np.newaxis]
-        relative_distances = distances / R
-        
-        # Velocity differences
-        vel_diff = np.sum((vel - neighbor_vel) * normal_vectors, axis=1)
-        
-        # Mask for positive velocity differences
-        positive_vel_mask = vel_diff > 0
-        
-        # Calculate viscosity forces
-        viscosity_forces = (
-            (1 - relative_distances[positive_vel_mask, np.newaxis]) * 
-            SIGMA * 
-            vel_diff[positive_vel_mask, np.newaxis] * 
-            normal_vectors[positive_vel_mask]
-        )
-        
-        # Update velocities
-        for idx, neighbor in enumerate(particle.neighbors):
-            if positive_vel_mask[idx]:
-                force = viscosity_forces[np.where(positive_vel_mask)[0] == idx][0]
-                # Update particle velocity
-                particle.x_vel -= force[0] * 0.5
-                particle.y_vel -= force[1] * 0.5
-                particle.z_vel -= force[2] * 0.5
-                # Update neighbor velocity
-                neighbor.x_vel += force[0] * 0.5
-                neighbor.y_vel += force[1] * 0.5
-                neighbor.z_vel += force[2] * 0.5'''
 
 def calculate_viscosity(particles: list[Particle]) -> None:
     for particle in particles:

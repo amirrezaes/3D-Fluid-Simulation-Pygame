@@ -3,3 +3,4 @@ pygame
 PyOpenGL 
 PyOpenGL_accelerate
 psutil
+numba
