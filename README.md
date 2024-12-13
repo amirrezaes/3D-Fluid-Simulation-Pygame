@@ -1,5 +1,5 @@
 # 3D SPH Fluid Simulation
-
+![](evolution/image_2024-12-12_16-06-24.png)
 A real-time 3D Smoothed Particle Hydrodynamics (SPH) fluid simulation implemented in Python using OpenGL for visualization.
 
 
