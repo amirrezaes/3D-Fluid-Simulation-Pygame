@@ -16,9 +16,9 @@ NEAR = 0.1
 FAR = 100.0
 ASPECT_RATIO = WINDOW_SIZE[0] / WINDOW_SIZE[1]
 
+
 class AnimatedScatter():
     def __init__(self):
-        super(AnimatedScatter, self).__init__()
         (
             self.NUM_PARTICLES, self.SIMULATION_WIDTH, self.GROUND_LEVEL, self.SIMULATION_DEPTH, 
             self.DAM_POSITION, self.DAM_BREAK_FRAME, self.GRAVITY_ACCELERATION,
@@ -110,22 +110,22 @@ class AnimatedScatter():
         glColor3f(0.0, 1.0, 0.0)
 
         # bottom
-        glVertex3f(-self.SIMULATION_WIDTH - 0.02, self.GROUND_LEVEL, -self.SIMULATION_DEPTH)
-        glVertex3f(self.SIMULATION_WIDTH  + 0.02, self.GROUND_LEVEL, -self.SIMULATION_DEPTH)
-        glVertex3f(self.SIMULATION_WIDTH  + 0.02, self.GROUND_LEVEL, self.SIMULATION_DEPTH)
-        glVertex3f(-self.SIMULATION_WIDTH - 0.02, self.GROUND_LEVEL, self.SIMULATION_DEPTH)
+        glVertex3f(-self.SIMULATION_WIDTH - 0.03, self.GROUND_LEVEL - 0.03, -self.SIMULATION_DEPTH)
+        glVertex3f(self.SIMULATION_WIDTH  + 0.03, self.GROUND_LEVEL - 0.03, -self.SIMULATION_DEPTH)
+        glVertex3f(self.SIMULATION_WIDTH  + 0.03, self.GROUND_LEVEL - 0.03, self.SIMULATION_DEPTH)
+        glVertex3f(-self.SIMULATION_WIDTH - 0.03, self.GROUND_LEVEL - 0.03, self.SIMULATION_DEPTH)
 
         # left
-        glVertex3f(-self.SIMULATION_WIDTH - 0.02, self.GROUND_LEVEL, -self.SIMULATION_DEPTH)
-        glVertex3f(-self.SIMULATION_WIDTH - 0.02, self.GROUND_LEVEL, self.SIMULATION_DEPTH)
-        glVertex3f(-self.SIMULATION_WIDTH - 0.02, self.SIMULATION_WIDTH, self.SIMULATION_DEPTH)
-        glVertex3f(-self.SIMULATION_WIDTH - 0.02, self.SIMULATION_WIDTH, -self.SIMULATION_DEPTH)
+        glVertex3f(-self.SIMULATION_WIDTH - 0.03, self.GROUND_LEVEL - 0.03 , -self.SIMULATION_DEPTH)
+        glVertex3f(-self.SIMULATION_WIDTH - 0.03, self.GROUND_LEVEL - 0.03    , self.SIMULATION_DEPTH)
+        glVertex3f(-self.SIMULATION_WIDTH - 0.03, self.SIMULATION_WIDTH - 0.03 , self.SIMULATION_DEPTH)
+        glVertex3f(-self.SIMULATION_WIDTH - 0.03, self.SIMULATION_WIDTH - 0.03 , -self.SIMULATION_DEPTH)
 
         # right
-        glVertex3f(self.SIMULATION_WIDTH + 0.02, self.GROUND_LEVEL, -self.SIMULATION_DEPTH)
-        glVertex3f(self.SIMULATION_WIDTH + 0.02, self.GROUND_LEVEL, self.SIMULATION_DEPTH)
-        glVertex3f(self.SIMULATION_WIDTH + 0.02, self.SIMULATION_WIDTH, self.SIMULATION_DEPTH)
-        glVertex3f(self.SIMULATION_WIDTH + 0.02, self.SIMULATION_WIDTH, -self.SIMULATION_DEPTH)
+        glVertex3f(self.SIMULATION_WIDTH + 0.03, self.GROUND_LEVEL - 0.03   , -self.SIMULATION_DEPTH)
+        glVertex3f(self.SIMULATION_WIDTH + 0.03, self.GROUND_LEVEL - 0.03 , self.SIMULATION_DEPTH)
+        glVertex3f(self.SIMULATION_WIDTH + 0.03, self.SIMULATION_WIDTH - 0.03 , self.SIMULATION_DEPTH)
+        glVertex3f(self.SIMULATION_WIDTH + 0.03, self.SIMULATION_WIDTH - 0.03 , -self.SIMULATION_DEPTH)
 
         glEnd()
 
@@ -186,7 +186,7 @@ class AnimatedScatter():
     
     def draw_fps(self):
         fps = int(self.clock.get_fps())
-        fps_text = self.font.render(f'FPS: {fps} | Frame Time: {(1000 / (fps + 1)):.4f} MEM: {process.memory_info().rss} Bytes', True, pygame.Color('white'))
+        fps_text = self.font.render(f'FPS: {fps} | Frame Time: {(1000 / (fps + 1)):.4f} MEM: {process.memory_info().rss//1000000} MBytes | particle count={len(self.simulation_state)}', True, pygame.Color('white'))
         fps_data = pygame.image.tostring(fps_text, 'RGBA', True)
         glWindowPos2d(10, 10)  # Position at (10, 10)
         glDrawPixels(fps_text.get_width(), fps_text.get_height(), GL_RGBA, GL_UNSIGNED_BYTE, fps_data)
@@ -229,7 +229,7 @@ class AnimatedScatter():
 
         self.draw_fps()
         pygame.display.flip()
-        self.clock.tick()
+        self.clock.tick(30)
 
     def update_simulation(self, particles, dam):
         [p.update_state(dam) for p in particles]

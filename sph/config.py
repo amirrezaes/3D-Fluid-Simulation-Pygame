@@ -1,7 +1,7 @@
 """Configuration module for fluid dynamics particle simulation parameters."""
 
 # Simulation domain parameters
-NUM_PARTICLES = 400  # Total number of particles in the simulation
+NUM_PARTICLES = 300       # not exact, but close
 SIMULATION_WIDTH = 0.35  # Horizontal extent of the simulation space (x-axis)
 SIMULATION_DEPTH = 0.12  # Vertical extent of the simulation space (z-axis)
 GROUND_LEVEL = 0  # Base y-coordinate of the simulation space

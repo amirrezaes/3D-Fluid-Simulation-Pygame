@@ -49,7 +49,7 @@ Run the simulation: inside the 3D-Fluid-Simulation-Pygame folder run:
 ```bash
 python sph
 ```
-
+you can adjust the particle count in config.py if your system can not handle defult value.
 ### Controls
 
 - **Arrow Keys**: Rotate camera view
@@ -95,7 +95,7 @@ python sph
 
 ## Requirements
 
-- Python 3.6+
+- **Python 3.9 - 3.12 (pyOpenGL might not install in other versions, tested on 3.10 only)**
 - NumPy
 - Pygame
 - PyOpenGL

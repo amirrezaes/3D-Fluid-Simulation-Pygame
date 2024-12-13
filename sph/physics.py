@@ -31,11 +31,10 @@ from typing import List
 def start(xmin: float, xmax: float, ymin: float, zmin: float, space: float, count: int) -> list[Particle]:
     """Creates a 3D cube of particles using vectorized operations"""
     particles_per_side = int(pow(count, 1/3))  # Cube root for 3D distribution
-    
     # Create coordinate grids
     x = np.linspace(xmin, xmin + (particles_per_side-1)*space, particles_per_side)
-    y = np.linspace(ymin, ymin + (particles_per_side-1)*space, particles_per_side)
-    z = np.linspace(zmin, zmin + (particles_per_side-1)*space, particles_per_side)
+    y = np.linspace(ymin, ymin + 1, particles_per_side)
+    z = np.linspace(zmin, zmin + (particles_per_side-1)*space, particles_per_side+1)
     
     # Generate all combinations of coordinates
     X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
