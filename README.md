@@ -27,7 +27,7 @@ This project implements a particle-based fluid simulation using the SPH method. 
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/amirrezaes/3D-Fluid-Simulation-Pygame
 cd 3D-Fluid-Simulation-Pygame
 ```
 
